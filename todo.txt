@@ -1,6 +1,0 @@
-Event Management System
- - Frontend
-    
-
- - Backend
-    
