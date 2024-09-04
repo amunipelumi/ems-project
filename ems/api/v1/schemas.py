@@ -28,3 +28,17 @@ class CreateUser(User):
 class GetUsers(GetUser):
     class Config:
         from_attributes = True
+
+
+class LoginUser(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: Optional[EmailStr] = None
