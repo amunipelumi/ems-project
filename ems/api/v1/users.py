@@ -39,7 +39,7 @@ def get_users(
     db: Session=Depends(database.get_db),
     __: dict=Depends(oauth2.current_user)
     ):
-    print(__.__dict__)
+    # print(__.__dict__)
     users = db.query(models.User).all()
     if not users:
        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,

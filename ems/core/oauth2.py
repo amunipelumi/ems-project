@@ -7,8 +7,7 @@ from pydantic import EmailStr
 ###
 import os
 import jwt
-# from jwt import exceptions
-# from jose import JWTError
+from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta, timezone
 
 ###
@@ -42,7 +41,7 @@ def get_token(data: dict):
         key=SECRET_KEY, 
         algorithm=ALGORITHM
         )
-    return token
+    return {'access_token': token, 'token_type': 'bearer'}
 
 # Verify a given token 
 def verify_token(token: str):
@@ -55,20 +54,22 @@ def verify_token(token: str):
         email: EmailStr = payload.get('email')
         if not email:
             raise exception
-        token_data = schemas.TokenData(email=email)
-    except jwt.exceptions:
+        _data = schemas.TokenData(email=email)
+    except InvalidTokenError:
         raise exception
-    return token_data
+    return _data
 
 # Getting the current user, this becomes a vital dependency
+# to be included on all path operation function where 
+# authentication is required
 def current_user(
         token: str=Depends(oauth2_schema), 
         db: Session=Depends(database.get_db)
         ):
-    token_data = verify_token(token)
+    _data = verify_token(token)
     _user = (
         db.query(models.User)
-        .filter(models.User.email==token_data.email)
+        .filter(models.User.email==_data.email)
         .first()
         )
     return _user

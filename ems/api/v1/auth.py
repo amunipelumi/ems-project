@@ -11,7 +11,8 @@ from . import schemas
 
 
 router = APIRouter(
-    tags=['Authentication']
+    prefix='/auth',
+    tags=['Authentication'],
 )
 
 # Register/signup a new user
@@ -41,10 +42,11 @@ def login(
     # user: schemas.LoginUser,
     db: Session=Depends(database.get_db)
     ):
-    # Check for user
+    # Check for user depending on the schema used
+    # user.username or user.email
     db_query = (
         db.query(models.User)
-        .filter(models.User.email==user.username)  # user.email)
+        .filter(models.User.email==user.username)
         .first()
         )
     if not db_query:
@@ -60,6 +62,6 @@ def login(
             detail='Invalid credentials'
         )
     # Create and return access token
-    token = oauth2.get_token({'email': user.username})
-    return {'access_token': token, 'token_type': 'bearer'}
-    
+    data = {'email': user.username}
+    token = oauth2.get_token(data)
+    return token
