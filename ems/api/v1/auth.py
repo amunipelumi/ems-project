@@ -27,9 +27,15 @@ def create_user(
     ):
     user.password = utils.hash(user.password)
     _user = models.User(**user.model_dump())
-    db.add(_user)
-    db.commit()
-    db.refresh(_user)
+    try:
+        db.add(_user)
+        db.commit()
+        db.refresh(_user)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='Details already in use'
+            )
     return _user
 
 # Login/signin a user

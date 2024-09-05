@@ -8,7 +8,7 @@ class User(BaseModel):
     name: str
     username: str
     email: EmailStr
-    phone_number: Optional[int] = 0
+    phone_number: Optional[str] = "0"
     
 
 class GetUser(BaseModel):
@@ -16,7 +16,7 @@ class GetUser(BaseModel):
     name: str
     username: str
     email: EmailStr
-    phone_number: Optional[int] = 0
+    phone_number: Optional[str] = "0"
     created_at: datetime
 
 

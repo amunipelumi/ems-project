@@ -72,4 +72,6 @@ def current_user(
         .filter(models.User.email==_data.email)
         .first()
         )
-    return _user
+    if _user:
+        return _user
+    raise exception
