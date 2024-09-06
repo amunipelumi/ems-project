@@ -6,20 +6,32 @@ from typing import List
 ###
 from ...db import models, database
 from ...core import oauth2
+from ...__ import prefix_
 from . import schemas
 
 
 
 router = APIRouter(
-    prefix='/users',
+    prefix=f'{prefix_}/users',
     tags=['Users']
 )
 
 ## Handling currently logged in user
+# Get current user profile/account for admin
+@router.get(
+        '/me/admin',
+        response_model=schemas.GetAdmin
+        )
+def get_me(
+    me: dict=Depends(oauth2.admin_user)
+    ):
+    # print(me.__dict__)
+    return me
+
 # Get current user profile/account
 @router.get(
         '/me',
-        response_model=schemas.User
+        response_model=schemas.GetUser
         )
 def get_me(
     me: dict=Depends(oauth2.current_user)

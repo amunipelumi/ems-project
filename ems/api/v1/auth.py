@@ -6,14 +6,39 @@ from sqlalchemy.orm import Session
 ###
 from ...db import models, database
 from ...core import utils, oauth2
+from ...__ import prefix_
 from . import schemas
 
 
 
 router = APIRouter(
-    prefix='/auth',
+    prefix=f'{prefix_}/auth',
     tags=['Authentication'],
 )
+
+# Create an admin user
+# This user can create events for others to attend
+@router.post(
+        '/signup/admin_user', 
+        response_model=schemas.GetAdmin, 
+        status_code=status.HTTP_201_CREATED
+        )
+def create_admin(
+    user: schemas.CreateAdmin, 
+    db: Session=Depends(database.get_db)
+    ):
+    user.password = utils.hash(user.password)
+    _user = models.User(**user.model_dump())
+    try:
+        db.add(_user)
+        db.commit()
+        db.refresh(_user)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='Details already in use'
+            )
+    return _user
 
 # Register/signup a new user
 @router.post(
@@ -68,6 +93,9 @@ def login(
             detail='Invalid credentials'
         )
     # Create and return access token
-    data = {'email': user.username}
+    data = {
+        'is_admin': db_query.is_admin,
+        'email': user.username
+        }
     token = oauth2.get_token(data)
     return token

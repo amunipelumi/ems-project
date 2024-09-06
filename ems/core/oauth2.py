@@ -11,6 +11,7 @@ from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta, timezone
 
 ###
+from ..__ import prefix_
 from ..api.v1 import schemas
 from ..db import database, models
 
@@ -20,7 +21,7 @@ EXPIRE_MIN = os.getenv('EXPIRE_MIN')
 SECRET_KEY = os.getenv('SECRET_KEY')
 ALGORITHM = os.getenv('ALGORITHM')
 
-oauth2_schema = OAuth2PasswordBearer('/signin')
+oauth2_schema = OAuth2PasswordBearer(f'{prefix_}/auth/signin')
 
 exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED, 
@@ -52,9 +53,13 @@ def verify_token(token: str):
             algorithms=[ALGORITHM]
             )
         email: EmailStr = payload.get('email')
+        is_admin: bool = payload.get('is_admin')
         if not email:
             raise exception
-        _data = schemas.TokenData(email=email)
+        _data = schemas.TokenData(
+            email=email, 
+            is_admin=is_admin
+            )
     except InvalidTokenError:
         raise exception
     return _data
@@ -69,9 +74,32 @@ def current_user(
     _data = verify_token(token)
     _user = (
         db.query(models.User)
-        .filter(models.User.email==_data.email)
+        .filter(
+            models.User.email==_data.email,
+            )
         .first()
         )
+    if _user:
+        return _user
+    raise exception
+
+# Similar to current user but for admin, useful for operations
+# requiring admin previledges (e.g: deleting an event)
+def admin_user(
+        token: str=Depends(oauth2_schema), 
+        db: Session=Depends(database.get_db)
+        ):
+    _data = verify_token(token)
+    _user = None
+    if _data.is_admin:
+        _user = (
+            db.query(models.User)
+            .filter(
+                models.User.email==_data.email, 
+                models.User.is_admin==_data.is_admin
+                )
+            .first()
+            )
     if _user:
         return _user
     raise exception
