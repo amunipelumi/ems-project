@@ -4,6 +4,7 @@ from typing import Optional
 
 
 
+# User management schemas
 class User(BaseModel):
     name: str
     username: str
@@ -33,6 +34,7 @@ class GetUsers(GetUser):
     class Config:
         from_attributes = True
 
+# Authentication schemas
 class LoginUser(BaseModel):
     email: EmailStr
     password: str
@@ -44,3 +46,38 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[EmailStr] = None
     is_admin: Optional[bool]
+
+# Event management schemas
+class CreateEvent(BaseModel):
+    event_name: str
+    event_type: str
+    event_address: str
+    event_description: str
+    event_starts: datetime
+    event_ends: datetime
+    organizer_id: Optional[int] = 0
+
+class CreateEventResp(BaseModel):
+    organizer_id: int
+    event_id: int
+    event_name: str
+    event_type: str
+    event_address: str
+    event_description: str
+    event_starts: datetime
+    event_ends: datetime
+    updated_at: datetime
+
+class GetEvent(BaseModel):
+    organizer_id: int
+    event_id: int
+    event_name: str
+    event_type: str
+    event_address: str
+    event_description: str
+    event_starts: datetime
+    event_ends: datetime
+
+class GetEvents(GetEvent):
+    class Config:
+        from_attributes = True

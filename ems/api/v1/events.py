@@ -17,27 +17,119 @@ router = APIRouter(
 )
 
 # Create a new event
-@router.post('/')
-def create_event():
-    pass
+@router.post(
+        '/',
+        response_model=schemas.CreateEventResp,
+        status_code=status.HTTP_201_CREATED 
+        )
+def create_event(
+    event: schemas.CreateEvent,
+    db: Session=Depends(database.get_db),
+    auth_user: dict=Depends(oauth2.admin_user),
+    ):
+    event.organizer_id = auth_user.id    
+    _event = models.Event(**event.model_dump())
+    db.add(_event)
+    db.commit()
+    db.refresh(_event)
+    return _event
 
 # Get all events 
 # with optional filters: by date, venue, category
-@router.get('/')
-def get_events():
-    pass
+@router.get(
+        '/',
+        response_model=List[schemas.GetEvents],
+        )
+def get_events(
+    db: Session=Depends(database.get_db),
+    auth_user: dict=Depends(oauth2.current_user)
+    ):
+    events = (
+        db.query(models.Event)
+        .all()
+        )
+    if not events:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No event found!')
+    return events
 
 # Get a specific event
-@router.get('/{id}')
-def get_event():
-    pass
+@router.get(
+        '/{id}', 
+        response_model=schemas.GetEvent
+        )
+def get_event(
+    id: int,
+    db: Session=Depends(database.get_db),
+    auth_user: dict=Depends(oauth2.current_user)
+    ):
+    event = (
+        db.query(models.Event)
+        .filter(models.Event.event_id==id)
+        .first()
+        )
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No event found!'
+            )
+    return event
 
 # Update an event
-@router.put('/{id}')
-def update_event():
-    pass
-
+@router.put(
+        '/{id}',
+        response_model=schemas.CreateEventResp,
+        status_code=status.HTTP_202_ACCEPTED
+        )
+def update_event(
+    id: int,
+    event: schemas.CreateEvent,
+    db: Session=Depends(database.get_db),
+    auth_user: dict=Depends(oauth2.admin_user)
+    ):
+    evt = (
+        db.query(models.Event)
+        .filter(
+            models.Event.organizer_id==auth_user.id,
+            models.Event.event_id==id
+            )
+        )
+    if not evt.first():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Event not found!!'
+            )
+    event.organizer_id = auth_user.id
+    evt.update(
+        event.model_dump(), 
+        synchronize_session=False
+        )
+    db.commit()
+    _updated = evt.first()
+    return _updated
+    
 # Delete an event
-@router.delete('/{id}')
-def delete_event():
-    pass
+@router.delete(
+        '/{id}',
+        status_code=status.HTTP_204_NO_CONTENT
+        )
+def delete_event(
+    id: int,
+    db: Session=Depends(database.get_db),
+    auth_user: dict=Depends(oauth2.admin_user)
+    ):
+    evt = (
+        db.query(models.Event)
+        .filter(
+            models.Event.organizer_id==auth_user.id,
+            models.Event.event_id==id
+            )
+        )
+    if not evt.first():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Event not found!!'
+            )
+    evt.delete(synchronize_session=False)
+    db.commit()
