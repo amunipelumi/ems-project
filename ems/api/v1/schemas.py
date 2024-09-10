@@ -1,6 +1,10 @@
+###
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
+
+###
+from ...db.models import TicketType
 
 
 
@@ -49,23 +53,16 @@ class TokenData(BaseModel):
 
 # Event management schemas
 class CreateEvent(BaseModel):
-    event_name: str
-    event_type: str
-    event_address: str
-    event_description: str
-    event_starts: datetime
+    name: str
+    description: str
+    starts: datetime
     event_ends: datetime
-    organizer_id: Optional[int] = 0
-
+    venue_id: int
+    category_id: int
+    organizer: Optional[int] = 0
+### t0 bbbbb*******
 class CreateEventResp(BaseModel):
-    organizer_id: int
-    event_id: int
-    event_name: str
-    event_type: str
-    event_address: str
-    event_description: str
-    event_starts: datetime
-    event_ends: datetime
+    id: int
     updated_at: datetime
 
 class GetEvent(BaseModel):
@@ -81,3 +78,20 @@ class GetEvent(BaseModel):
 class GetEvents(GetEvent):
     class Config:
         from_attributes = True
+
+# Ticket management schemas
+class CreateTicket(BaseModel):
+    event: int
+    type: TicketType
+    price: float
+    quantity: int
+    owner: Optional[int]
+
+class GetTickets(BaseModel):
+    id: int
+    event: int
+    type: TicketType
+    price: float
+    quantity: int
+    owner: Optional[int]
+    updated_at: datetime

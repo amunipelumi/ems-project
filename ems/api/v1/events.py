@@ -27,7 +27,7 @@ def create_event(
     db: Session=Depends(database.get_db),
     auth_user: dict=Depends(oauth2.admin_user),
     ):
-    event.organizer_id = auth_user.id    
+    event.organizer = auth_user.id    
     _event = models.Event(**event.model_dump())
     db.add(_event)
     db.commit()
@@ -66,7 +66,7 @@ def get_event(
     ):
     event = (
         db.query(models.Event)
-        .filter(models.Event.event_id==id)
+        .filter(models.Event.id==id)
         .first()
         )
     if not event:
@@ -91,8 +91,8 @@ def update_event(
     evt = (
         db.query(models.Event)
         .filter(
-            models.Event.organizer_id==auth_user.id,
-            models.Event.event_id==id
+            models.Event.organizer==auth_user.id,
+            models.Event.id==id
             )
         )
     if not evt.first():
@@ -100,7 +100,7 @@ def update_event(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Event not found!!'
             )
-    event.organizer_id = auth_user.id
+    event.organizer = auth_user.id
     evt.update(
         event.model_dump(), 
         synchronize_session=False
@@ -122,8 +122,8 @@ def delete_event(
     evt = (
         db.query(models.Event)
         .filter(
-            models.Event.organizer_id==auth_user.id,
-            models.Event.event_id==id
+            models.Event.organizer==auth_user.id,
+            models.Event.id==id
             )
         )
     if not evt.first():
