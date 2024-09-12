@@ -59,8 +59,8 @@ class CreateEvent(BaseModel):
     event_ends: datetime
     venue_id: int
     category_id: int
-    organizer: Optional[int] = 0
-### t0 bbbbb*******
+    organizer_id: Optional[int] = 0
+### *******
 class CreateEventResp(BaseModel):
     id: int
     updated_at: datetime
