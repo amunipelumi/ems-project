@@ -42,11 +42,11 @@ def get_me(
 # Update current user profile/account
 @router.put(
         '/me',
-        response_model=schemas.User,
+        response_model=schemas.UserTable,
         status_code=status.HTTP_202_ACCEPTED,
         )
 def update_me(
-    __: schemas.User,
+    __: schemas.UserTable,
     db: Session=Depends(database.get_db),
     me: dict=Depends(oauth2.current_user),
     ):
@@ -95,7 +95,6 @@ def delete_me(
     #                         detail='User not found!!')
     db_query.delete(synchronize_session=False)
     db.commit()
-    return {'detail': 'Account successfully deleted!'}
 
 # Get a user by id
 @router.get(
@@ -113,18 +112,18 @@ def get_user(
                            detail=f'No user found!!')
     return user
 
-# # Get all users
-# @router.get(
-#     '/all', 
-#     response_model=List[schemas.GetUsers]
-#     )
-# def get_users(
-#     db: Session=Depends(database.get_db),
-#     __: dict=Depends(oauth2.current_user)
-#     ):
-#     # print(__.__dict__)
-#     users = db.query(models.User).all()
-#     if not users:
-#        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-#                            detail=f'No user found!!')
-#     return users
+# Get all users
+@router.get(
+    '/', 
+    response_model=List[schemas.GetUser]
+    )
+def get_users(
+    db: Session=Depends(database.get_db),
+    __: dict=Depends(oauth2.current_user)
+    ):
+    # print(__.__dict__)
+    users = db.query(models.User).all()
+    if not users:
+       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                           detail=f'No user found!!')
+    return users

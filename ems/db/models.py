@@ -137,7 +137,7 @@ class Venue(Base):
 
     id = Column(Integer, nullable=False, primary_key=True)
     name = Column(String(150), nullable=False)
-    address = Column(String(250), nullable=False)
+    address = Column(String(250), nullable=False, unique=True)
     city = Column(String(50), nullable=False)
     country = Column(String(50), nullable=False)
     capacity = Column(Integer, nullable=False)

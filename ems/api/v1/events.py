@@ -15,30 +15,31 @@ router = APIRouter(
     prefix=f'{prefix_}/events',
     tags=['Events']
 )
-
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a new event
 @router.post(
         '/',
-        response_model=schemas.CreateEventResp,
+        response_model=schemas.GetEvent,
         status_code=status.HTTP_201_CREATED 
         )
 def create_event(
-    event: schemas.CreateEvent,
+    evnt: schemas.EventTable,
     db: Session=Depends(database.get_db),
     auth_user: dict=Depends(oauth2.admin_user),
     ):
-    event.organizer = auth_user.id    
+    event = evnt.model_copy(update={'organizer_id': auth_user.id})
     _event = models.Event(**event.model_dump())
     db.add(_event)
     db.commit()
     db.refresh(_event)
     return _event
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Get all events 
 # with optional filters: by date, venue, category
 @router.get(
         '/',
-        response_model=List[schemas.GetEvents],
+        response_model=List[schemas.GetEvent],
         )
 def get_events(
     db: Session=Depends(database.get_db),
@@ -79,19 +80,19 @@ def get_event(
 # Update an event
 @router.put(
         '/{id}',
-        response_model=schemas.CreateEventResp,
+        response_model=schemas.GetEvent,
         status_code=status.HTTP_202_ACCEPTED
         )
 def update_event(
     id: int,
-    event: schemas.CreateEvent,
+    event: schemas.EventTable,
     db: Session=Depends(database.get_db),
     auth_user: dict=Depends(oauth2.admin_user)
     ):
     evt = (
         db.query(models.Event)
         .filter(
-            models.Event.organizer==auth_user.id,
+            models.Event.organizer_id==auth_user.id,
             models.Event.id==id
             )
         )
@@ -100,7 +101,7 @@ def update_event(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Event not found!!'
             )
-    event.organizer = auth_user.id
+    event.organizer_id = auth_user.id
     evt.update(
         event.model_dump(), 
         synchronize_session=False
@@ -122,7 +123,7 @@ def delete_event(
     evt = (
         db.query(models.Event)
         .filter(
-            models.Event.organizer==auth_user.id,
+            models.Event.organizer_id==auth_user.id,
             models.Event.id==id
             )
         )
