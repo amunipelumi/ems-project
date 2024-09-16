@@ -23,15 +23,67 @@ router = APIRouter(
         status_code=status.HTTP_201_CREATED 
         )
 def create_event(
-    evnt: schemas.EventTable,
+    evnt: schemas.CreateEventMain,
     db: Session=Depends(database.get_db),
     auth_user: dict=Depends(oauth2.admin_user),
     ):
-    event = evnt.model_copy(update={'organizer_id': auth_user.id})
-    _event = models.Event(**event.model_dump())
-    db.add(_event)
-    db.commit()
-    db.refresh(_event)
+    category = evnt.category
+    venue = evnt.venue
+    event = evnt.event
+    _category = (
+        db.query(models.Category)
+        .filter_by(name=category.name)
+        .first()
+        )
+    if not _category:
+        _category = models.Category(
+            **category.model_dump()
+            )
+        db.add(_category)
+        db.commit()
+        db.refresh(_category)
+    _venue = (
+        db.query(models.Venue)
+        .filter_by(
+            name=venue.name,
+            city=venue.city,
+            address=venue.address,
+            country=venue.country,
+            capacity=venue.capacity
+            )
+        .first()
+        )
+    if not _venue:
+        _venue = models.Venue(
+            **venue.model_dump()
+            )
+        db.add(_venue)
+        db.commit()
+        db.refresh(_venue)
+    _event = (
+        db.query(models.Event)
+        .filter_by(
+            name=event.name,
+            description=event.description,
+            starts=event.starts,
+            event_ends=event.event_ends,
+            organizer_id=auth_user.id,
+            category_id=_category.id,
+            venue_id=_venue.id
+            )
+        .first()
+        )
+    if not _event:
+        event_ = event.model_dump()
+        event_.update({
+            'organizer_id': auth_user.id,
+            'category_id': _category.id,
+            'venue_id': _venue.id,
+            })
+        _event = models.Event(**event_)
+        db.add(_event)
+        db.commit()
+        db.refresh(_event)
     return _event
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

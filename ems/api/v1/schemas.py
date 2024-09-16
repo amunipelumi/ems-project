@@ -63,7 +63,7 @@ class TokenData(BaseModel):
 # Category management schema
 class Category(BaseModel):
     name: str
-    description: str
+    description: Optional[str] = 'Not yet'
 
 # Venue management schemas
 class Venue(BaseModel):
@@ -110,13 +110,12 @@ class Event(BaseModel):
 class EventTable(Event):
     venue_id: int
     category_id: int
-    # organizer_id: Optional[int] = 0
 
     class Config:
         from_attributes = True
 
 class GetEvent(EventTable):
-    id: str
+    id: int
     updated_at: datetime
 
     class Config:
