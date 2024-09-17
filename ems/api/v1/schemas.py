@@ -1,7 +1,7 @@
 ###
 from pydantic import BaseModel, EmailStr
+from typing import Optional, List
 from datetime import datetime
-from typing import Optional
 
 ###
 from ...db.models import TicketType
@@ -63,7 +63,6 @@ class TokenData(BaseModel):
 # Category management schema
 class Category(BaseModel):
     name: str
-    description: Optional[str] = 'Not yet'
 
 # Venue management schemas
 class Venue(BaseModel):
@@ -86,9 +85,14 @@ class Ticket(BaseModel):
     price: float
     quantity: int
 
+class Tickets(BaseModel):
+    tickets: List[Ticket]
+
+    class Config:
+        from_attributes = True
+
 class TicketTable(Ticket):
-    event: int
-    owner: Optional[int]
+    event_id: int
 
     class Config:
         from_attributes = True
@@ -128,6 +132,7 @@ class GetEvent(EventTable):
 class CreateEventMain(BaseModel):
     event: Event
     venue: Venue
+    tickets: Tickets
     category: Category
 
     class Config:
@@ -137,6 +142,7 @@ class CreateEventResp(BaseModel):
     event: Event
     venue: Venue
     organizer: User
+    tickets: Tickets
     category: Category
 
     class Config:

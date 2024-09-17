@@ -19,7 +19,7 @@ router = APIRouter(
 # Create a new event
 @router.post(
         '/',
-        response_model=schemas.GetEvent,
+        response_model=schemas.CreateEventResp,
         status_code=status.HTTP_201_CREATED 
         )
 def create_event(
@@ -27,64 +27,89 @@ def create_event(
     db: Session=Depends(database.get_db),
     auth_user: dict=Depends(oauth2.admin_user),
     ):
-    category = evnt.category
-    venue = evnt.venue
-    event = evnt.event
-    _category = (
+    _category = evnt.category
+    _ticket = evnt.tickets
+    _venue = evnt.venue
+    _event = evnt.event
+    ##
+    category = (
         db.query(models.Category)
-        .filter_by(name=category.name)
+        .filter_by(name=_category.name)
         .first()
         )
-    if not _category:
-        _category = models.Category(
-            **category.model_dump()
+    if not category:
+        category = models.Category(
+            **_category.model_dump()
             )
-        db.add(_category)
+        db.add(category)
         db.commit()
-        db.refresh(_category)
-    _venue = (
+        db.refresh(category)
+    ##
+    venue = (
         db.query(models.Venue)
         .filter_by(
-            name=venue.name,
-            city=venue.city,
-            address=venue.address,
-            country=venue.country,
-            capacity=venue.capacity
+            name=_venue.name,
+            city=_venue.city,
+            address=_venue.address,
+            country=_venue.country,
+            capacity=_venue.capacity
             )
         .first()
         )
-    if not _venue:
-        _venue = models.Venue(
-            **venue.model_dump()
+    if not venue:
+        venue = models.Venue(
+            **_venue.model_dump()
             )
-        db.add(_venue)
+        db.add(venue)
         db.commit()
-        db.refresh(_venue)
-    _event = (
+        db.refresh(venue)
+    ##
+    event = (
         db.query(models.Event)
         .filter_by(
-            name=event.name,
-            description=event.description,
-            starts=event.starts,
-            event_ends=event.event_ends,
+            name=_event.name,
+            description=_event.description,
+            starts=_event.starts,
+            event_ends=_event.event_ends,
             organizer_id=auth_user.id,
-            category_id=_category.id,
-            venue_id=_venue.id
+            category_id=category.id,
+            venue_id=venue.id
             )
         .first()
         )
-    if not _event:
-        event_ = event.model_dump()
+    if not event:
+        event_ = _event.model_dump()
         event_.update({
             'organizer_id': auth_user.id,
-            'category_id': _category.id,
-            'venue_id': _venue.id,
+            'category_id': category.id,
+            'venue_id': venue.id,
             })
-        _event = models.Event(**event_)
-        db.add(_event)
+        event = models.Event(**event_)
+        db.add(event)
         db.commit()
-        db.refresh(_event)
-    return _event
+        db.refresh(event)
+    ##
+    all_tickets = []
+    for data in _ticket.tickets:
+        ticket_ = data.model_dump()
+        ticket_.update({
+            'event_id': event.id
+        })
+        ticket = models.Ticket(**ticket_)
+        all_tickets.append(ticket)
+    db.add_all(all_tickets)
+    db.commit()
+    for _ in all_tickets:
+        db.refresh(_)
+    ##
+    response = {
+        'event': event,
+        'venue': venue,
+        'tickets': all_tickets,
+        'organizer': auth_user,
+        'category': category
+        }
+    return response 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Get all events 
