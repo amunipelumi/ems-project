@@ -1,5 +1,5 @@
 ###
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, RootModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 
@@ -85,24 +85,8 @@ class Ticket(BaseModel):
     price: float
     quantity: int
 
-class Tickets(BaseModel):
-    tickets: List[Ticket]
-
-    class Config:
-        from_attributes = True
-
-class TicketTable(Ticket):
-    event_id: int
-
-    class Config:
-        from_attributes = True
-
-class GetTicket(TicketTable):
-    id: int
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
+class Tickets(RootModel[List[Ticket]]):
+    pass
 
 # Event management schemas
 class Event(BaseModel):
@@ -111,26 +95,14 @@ class Event(BaseModel):
     starts: datetime
     event_ends: datetime
 
-class EventTable(Event):
-    venue_id: int
-    category_id: int
-
-    class Config:
-        from_attributes = True
-
-class GetEvent(EventTable):
+class Events(BaseModel):
     id: int
-    updated_at: datetime
+    name: str
+    description: str
+    starts: datetime
+    event_ends: datetime
 
-    class Config:
-        from_attributes = True
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-### ********************* ###
-# I have to make sure I do some database check for potential conflicts
-
-class CreateEventMain(BaseModel):
-    event: Event
+class CreateEvent(Event):
     venue: Venue
     tickets: Tickets
     category: Category
@@ -138,8 +110,7 @@ class CreateEventMain(BaseModel):
     class Config:
         from_attributes = True
 
-class CreateEventResp(BaseModel):
-    event: Event
+class CreatedEvent(Events):
     venue: Venue
     organizer: User
     tickets: Tickets
@@ -147,4 +118,20 @@ class CreateEventResp(BaseModel):
 
     class Config:
         from_attributes = True
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+class EventDetails(Event):
+    venue: Venue
+    organizer: User
+    tickets: Tickets
+    category: Category
+
+    class Config:
+        from_attributes = True
+
+class UpdateEvent(Event):
+    venue: Venue
+    tickets: Tickets
+    category: Category
+
+    class Config:
+        from_attributes = True
