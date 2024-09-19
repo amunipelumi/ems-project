@@ -127,11 +127,3 @@ class EventDetails(Event):
 
     class Config:
         from_attributes = True
-
-class UpdateEvent(Event):
-    venue: Venue
-    tickets: Tickets
-    category: Category
-
-    class Config:
-        from_attributes = True

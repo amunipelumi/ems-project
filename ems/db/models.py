@@ -17,7 +17,6 @@ import enum
 class TicketType(enum.Enum):
     VIP = "VIP"
     REGULAR = "Regular"
-    # EARLY_BIRD = "Early Bird"
 
 # User model
 class User(Base):
@@ -35,7 +34,7 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
     
     # *Relationships*
-    # A user can organize many events as an admin
+    # Admin-user can organize many events
     events = relationship('Event', backref='user')
     # A user can make many bookings
     bookings = relationship('Booking', backref='user')
@@ -49,15 +48,12 @@ class Event(Base):
     description = Column(Text, nullable=True)
     starts = Column(DateTime(timezone=True), nullable=False)
     event_ends = Column(DateTime(timezone=True), nullable=False)
-    venue_id = Column(Integer, ForeignKey('venues.id'), nullable=True)
     category_id = Column(Integer, ForeignKey('categories.id'), nullable=True)
     organizer_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
     # *Relationships*
-    # An event is held at one venue
-    venue = relationship('Venue', backref='events')
     # An event has many tickets
     tickets = relationship('Ticket', backref='event')
     # An event has many bookings
@@ -71,12 +67,16 @@ class Venue(Base):
 
     id = Column(Integer, nullable=False, primary_key=True)
     name = Column(String(150), nullable=False)
-    address = Column(String(250), nullable=False, unique=True)
+    address = Column(String(250), nullable=False)
     city = Column(String(50), nullable=False)
     country = Column(String(50), nullable=False)
     capacity = Column(Integer, nullable=False)
+    event_id = Column(Integer, ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
+
+    # *Relationships*
+    event = relationship('Event', backref='venue')
 
 # Booking Model **non-admin user
 class Booking(Base):
