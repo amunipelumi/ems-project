@@ -39,7 +39,7 @@ class User(Base):
     # A user can make many bookings
     bookings = relationship('Booking', backref='user')
     
-# Event model **admin
+# Event model 
 class Event(Base):
     __tablename__ = 'events'
 
@@ -54,14 +54,12 @@ class Event(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
     # *Relationships*
-    # An event has many tickets
+    venue = relationship('Venue', backref='events')
     tickets = relationship('Ticket', backref='event')
-    # An event has many bookings
     bookings = relationship('Booking', backref='event')
-    # An event belongs to one category
     category = relationship('Category', backref='events')
 
-# Venue Model **independent
+# Venue Model 
 class Venue(Base):
     __tablename__ = 'venues'
 
@@ -75,24 +73,21 @@ class Venue(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
-    # *Relationships*
-    event = relationship('Event', backref='venue')
-
-# Booking Model **non-admin user
+# Booking Model 
 class Booking(Base):
     __tablename__ = 'bookings'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    ticket_id = Column(Integer, ForeignKey('tickets.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     event_id = Column(Integer, ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
+    ticket_id = Column(Integer, ForeignKey('tickets.id', ondelete='CASCADE'), nullable=False)
     quantity = Column(Integer, nullable=False)
     date = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
     # *Relationships*
     ticket = relationship('Ticket', backref='bookings')
 
-# Ticket Model **admin
+# Ticket Model 
 class Ticket(Base):
     __tablename__ = 'tickets'
 
@@ -104,7 +99,7 @@ class Ticket(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
-# Category Model **independent
+# Category Model 
 class Category(Base):
     __tablename__ = 'categories'
 

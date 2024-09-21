@@ -72,12 +72,8 @@ class Venue(BaseModel):
     country: str
     capacity: int
 
-class GetVenue(Venue):
-    id: int
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
+class GetVenue(RootModel[List[Venue]]):
+    pass
 
 # Ticket management schemas
 class Ticket(BaseModel):
@@ -111,19 +107,19 @@ class CreateEvent(Event):
         from_attributes = True
 
 class CreatedEvent(Events):
-    venue: Venue
-    organizer: User
-    tickets: Tickets
     category: Category
+    organizer: User
+    venue: Venue
+    tickets: Tickets
 
     class Config:
         from_attributes = True
 
 class EventDetails(Event):
-    venue: Venue
-    organizer: User
-    tickets: Tickets
     category: Category
+    organizer: User
+    venue: GetVenue
+    tickets: Tickets
 
     class Config:
         from_attributes = True
