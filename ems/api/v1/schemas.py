@@ -80,6 +80,7 @@ class Ticket(BaseModel):
     type: TicketType
     price: float
     quantity: int
+    booked: Optional[int] = 0
 
 class Tickets(RootModel[List[Ticket]]):
     pass
@@ -123,3 +124,8 @@ class EventDetails(Event):
 
     class Config:
         from_attributes = True
+
+class Search(BaseModel):
+    skip: int = 0
+    limit: int = 10
+    search: Optional[str] = ""

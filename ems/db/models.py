@@ -96,6 +96,7 @@ class Ticket(Base):
     type = Column(Enum(TicketType), nullable=False)
     price = Column(Float, nullable=False)
     quantity = Column(Integer, nullable=False)
+    booked = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
