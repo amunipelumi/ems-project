@@ -1,10 +1,8 @@
 ###
 from fastapi import status, APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload, selectinload
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.sql import func
-from sqlalchemy import or_
 from typing import List, Optional
+from sqlalchemy import or_
 
 ###
 from ...db import models, database
@@ -20,7 +18,7 @@ router = APIRouter(
 )
 
 # Search for events
-@router.get('/', )# response_model=List[schemas.Events])
+@router.get('/', response_model=List[schemas.SearchEvents])
 def search_event(
     skip: int=0,
     limit: int=10,
@@ -39,46 +37,49 @@ def search_event(
     venue_ = [getattr(models.Venue, col).ilike(f"%{search}%") for col in venue_col]
     ##
     search_ = category_ + event_ + venue_
-    # events = (
-    #     db.query(models.Event)
-    #     .options(
-    #         joinedload(models.Event.category), 
-    #         joinedload(models.Event.venue)
-    #         )
-    #     .filter(or_(*search_))
-    #     .limit(limit)
-    #     .offset(skip)
-    #     .all()
-    #     )
     events = (
-    db.query(models.Event)
-    .join(models.Venue) 
-    .join(models.Category)
-    .filter(or_(*search_)) 
-    .limit(limit)
-    .offset(skip)
-    .all())
-    
-    print(events.__dict__)
-    # return events
+        db.query(models.Event, models.Category, models.Venue)
+        .join(models.Category)
+        .join(models.Venue)
+        .filter(or_(*search_))
+        .limit(limit)
+        .offset(skip)
+        .all()
+        )
+    if not events:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No event was found!'
+            )
+    result = []
+    for event in events:
+        result.append(event._asdict())
+    return result
 
-
-# @router.get('/', response_model=List[schemas.PostResponse2])
-# def get_all_posts(
-#     db: Session=Depends(database.get_db), 
-#     user_data: str=Depends(oauth2.get_current_user), 
-#     search: Optional[str]="", limit: int=10, skip: int=0
-#     ):
-    
-#     # owner_all = (db.query(models.Post)
-#     #              .filter(models.Post.user_id==user_data.id, 
-#     #                      models.Post.title.contains(search))
-#     #              .limit(limit).offset(skip).all())
-
-#     owner_all = (db.query(models.Post, func.count(models.Vote.post_id).label("Votes"))
-#                 .join(models.Vote, models.Vote.post_id==models.Post.id, isouter=True)
-#                 .group_by(models.Post.id)
-#                 .filter(models.Post.title.contains(search))
-#                 .limit(limit)
-#                 .offset(skip)
-#                 .all())
+# Search for event by id
+@router.get('/{event_id}', response_model=schemas.SearchedEvent)
+def search_event(
+    event_id: int,
+    db: Session=Depends(database.get_db),
+    auth_user: dict=Depends(oauth2.current_user),
+    ):
+    ##
+    event = db.query(models.Event).filter_by(
+        id=event_id
+        ).options(
+            joinedload(models.Event.user),
+            joinedload(models.Event.venue),
+            joinedload(models.Event.tickets),
+            joinedload(models.Event.category)
+            ).first()
+    ##
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Error!! No event found!'
+            )
+    ##
+    event = event.__dict__
+    organizer = event.pop('user')
+    event['organizer'] = organizer
+    return event

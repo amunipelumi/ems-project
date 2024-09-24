@@ -65,22 +65,38 @@ class Category(BaseModel):
     name: str
 
 # Venue management schemas
-class Venue(BaseModel):
+class Venu(BaseModel):
     name: str
     address: str
     city: str
     country: str
+
+class Venue(Venu):
     capacity: int
+
+    class Config:
+        from_attributes = True
+
+class GetVenu(RootModel[List[Venu]]):
+    pass
 
 class GetVenue(RootModel[List[Venue]]):
     pass
 
 # Ticket management schemas
-class Ticket(BaseModel):
+class Tickt(BaseModel):
     type: TicketType
     price: float
+
+class Ticket(Tickt):
     quantity: int
     booked: Optional[int] = 0
+
+    class Config:
+        from_attributes = True
+
+class Tickts(RootModel[List[Tickt]]):
+    pass
 
 class Tickets(RootModel[List[Ticket]]):
     pass
@@ -125,7 +141,19 @@ class EventDetails(Event):
     class Config:
         from_attributes = True
 
-class Search(BaseModel):
-    skip: int = 0
-    limit: int = 10
-    search: Optional[str] = ""
+class SearchEvents(BaseModel):
+    Event: Events
+    Category: Category
+    Venue: Venue
+
+    class Config:
+        from_attributes = True
+
+class SearchedEvent(Events):
+    organizer: User
+    category: Category
+    venue: GetVenu
+    tickets: Tickts
+
+    class Config:
+        from_attributes = True
