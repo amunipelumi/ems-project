@@ -17,6 +17,7 @@ import enum
 class TicketType(enum.Enum):
     VIP = "VIP"
     REGULAR = "Regular"
+    FREE = "Free"
 
 # User model
 class User(Base):
@@ -47,7 +48,7 @@ class Event(Base):
     name = Column(String(150), nullable=False)
     description = Column(Text, nullable=True)
     starts = Column(DateTime(timezone=True), nullable=False)
-    event_ends = Column(DateTime(timezone=True), nullable=False)
+    event_ends = Column(DateTime(timezone=True), nullable=True)
     category_id = Column(Integer, ForeignKey('categories.id'), nullable=True)
     organizer_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
@@ -65,10 +66,10 @@ class Venue(Base):
 
     id = Column(Integer, nullable=False, primary_key=True)
     name = Column(String(150), nullable=False)
-    address = Column(String(250), nullable=False)
-    city = Column(String(50), nullable=False)
-    country = Column(String(50), nullable=False)
-    capacity = Column(Integer, nullable=False)
+    address = Column(String(250), nullable=True)
+    city = Column(String(50), nullable=True)
+    country = Column(String(50), nullable=True)
+    capacity = Column(Integer, nullable=True)
     event_id = Column(Integer, ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
