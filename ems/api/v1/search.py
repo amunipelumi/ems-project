@@ -19,7 +19,7 @@ router = APIRouter(
 
 # Search for events
 @router.get('/', response_model=List[schemas.SearchEvents])
-def search_event(
+def search_events(
     skip: int=0,
     limit: int=10,
     search: Optional[str]="",

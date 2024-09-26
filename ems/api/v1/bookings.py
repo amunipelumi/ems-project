@@ -38,63 +38,61 @@ def book_event(
     event_id: int,
     ticket_: schemas.Book,
     db: Session=Depends(database.get_db),
-    auth_user: dict=Depends(oauth2.admin_user)
+    auth_user: dict=Depends(oauth2.current_user)
     ):
     ##
-    event = db.query(models.Event).filter_by(
-        id=event_id
-        ).options(
-            joinedload(models.Event.tickets)
-            ).first()
-    if not event:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail='Error, event was not found...'
-            )
-    ##
-    _type = None
-    tickets = event.tickets
-    # Check if the type of ticket exists
-    exist = False
-    for ticket in tickets:
-        if ticket['type'] == ticket_.type:
-            _type = ticket
-            exist = True
-            break
-    if exist is not True:
-        raise HTTPException(
-            status_code=403, 
-            detail=f'No "{ticket_.type}" ticket for this event..'
-            )
-    if ((_type.booked + ticket_.quantity) > _type.quantity):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Sorry, tickets fully booked...')
-    ##
-    booking_ = {
-        'user_id': auth_user.id,
-        'event_id': event_id,
-        'ticket_id': ticket.id,
-        'quantity': ticket_.quantity
-    }
-    ##
     try:
+        event = db.query(models.Event).filter_by(
+            id=event_id
+            ).options(
+                joinedload(models.Event.tickets)
+                ).first()
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail='Error, event was not found...'
+                )
+        ##
+        ticket = None
+        tickets = event.tickets
+        # Check if the type of ticket exists
+        exist = False
+        for _ticket in tickets:
+            if _ticket.type == ticket_.type:
+                ticket = _ticket
+                exist = True
+                break
+        if exist is not True:
+            raise HTTPException(
+                status_code=403, 
+                detail=f'No "{ticket_.type}" ticket for this event..'
+                )
+        if ((ticket.booked + ticket_.quantity) > ticket.quantity):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Sorry, tickets fully booked...')
+        ##
+        booking_ = {
+            'user_id': auth_user.id,
+            'event_id': event_id,
+            'ticket_id': ticket.id,
+            'quantity': ticket_.quantity
+        }
+        ##
         booking = models.Booking(**booking_)
         db.add(booking)
         db.flush()
         ## Update the booked column of ticket
-        ticket = db.query(models.Ticket).filter_by(event_id=event_id, type=_type.type).first()
+        ticket.booked += ticket_.quantity
+        db.commit()
+        db.refresh(booking)
+        print('Transaction successful...')
+    ##
     except SQLAlchemyError as error:
         db.rollback()
         print(error)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
-            detail='Error occured...'
+            detail='Error occured while trying to book tickets...'
             )
     return booking
-
-
-# user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-#     event_id = Column(Integer, ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
-#     ticket_id = Column(Integer, ForeignKey('tickets.id', ondelete='CASCADE'), nullable=False)
-#     quantity = Column(Integer, nullable=False)
