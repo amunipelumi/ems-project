@@ -18,8 +18,7 @@ router = APIRouter(
 )
 
 # Ticket Management
-# POST /events/{event_id}/tickets: Create tickets for an event
-# GET /events/{event_id}/tickets: List all tickets for a specific event
-# GET /tickets/{ticket_id}: Get details of a specific ticket
-# PUT /tickets/{ticket_id}: Update ticket information
-# DELETE /tickets/{ticket_id}: Delete a ticket
+# GET /events/{event_id}: List all tickets for a specific event
+# GET /{ticket_id}: Get details of a specific ticket
+# PUT /{ticket_id}: Update ticket information
+# DELETE /{ticket_id}: Delete a ticket

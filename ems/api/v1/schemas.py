@@ -172,3 +172,13 @@ class SearchedEvent(Events):
 class Book(BaseModel):
     type: TicketType
     quantity: int
+
+class Booked(BaseModel):
+    event_date: datetime
+    event_name: str
+    event_venue: str
+    event_description: str
+    event_category: str
+    event_organizer: str
+    ticket_type: TicketType
+    ticket_quantity: int

@@ -18,7 +18,8 @@ router = APIRouter(
 )
 
 # Create an event
-@router.post('/', response_model=schemas.CreatedEvent, status_code=status.HTTP_201_CREATED)
+@router.post('/', response_model=schemas.CreatedEvent, 
+             status_code=status.HTTP_201_CREATED)
 def create_event(
     evnt: schemas.CreateEvent, 
     db: Session=Depends(database.get_db),
@@ -59,8 +60,10 @@ def create_event(
             db.add(event)
             db.flush()
         else:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, 
-                                detail='Sorry, this event already exists..')
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, 
+                detail='Sorry, this event already exists..'
+                )
         ##
         venue = _venue.model_dump()
         venue['event_id'] = event.id
@@ -83,8 +86,10 @@ def create_event(
     except SQLAlchemyError as error:
         db.rollback()
         print(error)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
-                            detail='Unable to create event at the moment...')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail='Unable to create event at the moment...'
+            )
     ##
     response = {
         'id': event.id,
@@ -100,7 +105,8 @@ def create_event(
     return response
 
 # Update an event
-@router.put('/{event_id}', response_model=schemas.CreatedEvent, status_code=status.HTTP_202_ACCEPTED)
+@router.put('/{event_id}', response_model=schemas.CreatedEvent, 
+            status_code=status.HTTP_202_ACCEPTED)
 def update_event(
     event_id: int,
     evnt: schemas.CreateEvent,
@@ -122,8 +128,10 @@ def update_event(
         id=event_id
         ).first()
     if not event:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='Sorry, this event was not found...')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Sorry, this event was not found...'
+            )
     ##
     try:
         ## 
@@ -149,7 +157,8 @@ def update_event(
         if len(tickets) != len(_ticket.root):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='There was an error in the number of tickets..')
+                detail='There was an error in the number of tickets..'
+                )
         num = 0
         for ticket in tickets:
             ticket_ = _ticket.root[num]
@@ -169,8 +178,10 @@ def update_event(
     except SQLAlchemyError as error:
         print(error)
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
-                            detail='Unable to update event at the moment...')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail='Unable to update event at the moment...'
+            )
     ##
     response = {
         'id': event.id,
@@ -199,7 +210,8 @@ def get_events(
     if not events:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='No event found!')
+            detail='No event found!'
+            )
     return events
 
 # Get a specific event (this is for admin)
