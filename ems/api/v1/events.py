@@ -17,6 +17,8 @@ router = APIRouter(
     tags=['Events']
 )
 
+# image, event_title, brief_des, date_time, location, about_event, tags/categories, organizer
+
 # Create an event
 @router.post('/', response_model=schemas.CreatedEvent, 
              status_code=status.HTTP_201_CREATED)
@@ -81,7 +83,7 @@ def create_event(
         db.flush()
         ##
         db.commit()
-        print("\n**Transaction was successfull**\n")
+        # print("\n**Transaction was successfull**\n")
     ##
     except SQLAlchemyError as error:
         db.rollback()
@@ -173,7 +175,7 @@ def update_event(
         db.flush()
         ##
         db.commit()
-        print("\n**Transaction was successfull**\n")
+        # print("\n**Transaction was successfull**\n")
     ##
     except SQLAlchemyError as error:
         print(error)

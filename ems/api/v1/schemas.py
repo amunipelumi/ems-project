@@ -89,9 +89,14 @@ class GetVenue(RootModel[List[Venue]]):
     pass
 
 # Ticket management schemas
-class Tickt(BaseModel):
+class Tick(BaseModel):
     type: TicketType
+
+class Tickt(Tick):
     price: Optional[float] = 0
+
+    class Config:
+        from_attributes = True
 
 class Ticket(Tickt):
     quantity: int
@@ -169,16 +174,18 @@ class SearchedEvent(Events):
         from_attributes = True
 
 # Booking management schemas
-class Book(BaseModel):
+class Order(BaseModel):
     type: TicketType
     quantity: int
 
-class Booked(BaseModel):
-    event_date: datetime
+class Ordered(BaseModel):
+    attendee: EmailStr
     event_name: str
+    event_date: datetime
     event_venue: str
-    event_description: str
-    event_category: str
-    event_organizer: str
-    ticket_type: TicketType
-    ticket_quantity: int
+
+class AllOrders(BaseModel):
+    order_id: int
+    name: str
+    date: datetime
+    ticket: TicketType

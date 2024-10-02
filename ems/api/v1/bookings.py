@@ -1,8 +1,7 @@
 ###
 from fastapi import status, APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
-from typing import List
 
 ###
 from ...db import models, database
@@ -17,14 +16,6 @@ router = APIRouter(
     tags=['Bookings']
 )
 
-
-# Booking Management
-# GET /bookings/: List all bookings made by the user
-# GET /bookings/{booking_id}: Get details of a specific booking
-# PUT /bookings/{booking_id}: Update booking information
-# DELETE /bookings/{booking_id}: Cancel a booking
-
-
 # 1. Check for event availability
 # 2. Check if ticket type is available and the number of it 
 #    booked != quantity
@@ -34,10 +25,10 @@ router = APIRouter(
 #    book again 
 
 # Book an event
-@router.post('/events/{event_id}', response_model=schemas.Booked, status_code=201)
+@router.post('/events/{event_id}', response_model=schemas.Ordered, status_code=201)
 def book_event(
     event_id: int,
-    ticket_: schemas.Book,
+    ticket_: schemas.Order,
     db: Session=Depends(database.get_db),
     auth_user: dict=Depends(oauth2.current_user)
     ):
@@ -46,11 +37,9 @@ def book_event(
         event = db.query(models.Event).filter_by(
             id=event_id
             ).options(
-                joinedload(models.Event.user),
                 joinedload(models.Event.venue),
                 joinedload(models.Event.tickets),
                 joinedload(models.Event.bookings),
-                joinedload(models.Event.category)
                 ).first()
         if not event:
             raise HTTPException(
@@ -112,7 +101,7 @@ def book_event(
         ticket.booked += ticket_.quantity
         db.commit()
         db.refresh(booking_)
-        print('Transaction successful...')
+        # print('Transaction successful...')
     ##
     except SQLAlchemyError as error:
         db.rollback()
@@ -123,35 +112,9 @@ def book_event(
             )
     # event, category, venue, ticket, quantity
     response = {
-        'event_date': event.starts,
+        'attendee': auth_user.email,
         'event_name': event.name,
-        'event_venue': event.venue[0].name,
-        'event_description': event.description,
-        'event_category': event.category.name,
-        'event_organizer': event.user.name,
-        'ticket_type': ticket_.type,
-        'ticket_quantity': booking_.quantity
+        'event_date': event.starts,
+        'event_venue': event.venue[0].name
     }
     return response
-
-# Get all user's bookings
-@router.get('/')
-def get_bookings(
-    db: Session=Depends(database.get_db),
-    auth_user: dict=Depends(oauth2.current_user)
-    ):
-    bookings = db.query(models.Booking).filter_by(
-        user_id=auth_user.id
-        ).options(
-            joinedload(models.Booking.event)
-            ).all()
-    if not bookings:
-        raise HTTPException(
-            status_code=404, 
-            detail='You currently have no bookings'
-            )
-    ####_______________________________________
-    for booking in bookings:
-        print(booking.event.__dict__)
-    ####_______________________________________
-    pass
