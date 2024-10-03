@@ -1,6 +1,6 @@
 ###
 from fastapi import status, APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 
@@ -17,7 +17,6 @@ router = APIRouter(
     tags=['Tickets']
 )
 
-# GET /{ticket_id}: Get details of a specific ticket
 # PUT /{ticket_id}: Update ticket information
 # DELETE /{ticket_id}: Delete a ticket
 
@@ -39,6 +38,11 @@ def my_tickets(
             joinedload(models.Booking.event),
             joinedload(models.Booking.ticket)
             ).all()
+    if not orders:
+        raise HTTPException(
+            status_code=404,
+            detail='You currently have no orders...'
+            )
     ##
     all_tickets = []
     for order in orders:
@@ -50,24 +54,33 @@ def my_tickets(
         all_tickets.append(res)
     return all_tickets
 
-# get specific comes with image, name, date, location, organizer, ticket_type, attendee(name, email, etc)
-@router.get('/{order_id}')
+@router.get('/{order_id}', response_model=schemas.OrderDetail)
 def my_ticket(
     order_id: int,
     db: Session=Depends(database.get_db),
     auth_user: dict=Depends(oauth2.current_user)
     ):
     ##
-    order = (db.query(models.Booking, models.Ticket, models.Event, models.Venue)
+    order = (db.query(models.Booking, models.Ticket, models.Event, models.User, models.Venue)
              .join(models.Ticket, models.Booking.ticket_id==models.Ticket.id)
              .join(models.Event, models.Ticket.event_id==models.Event.id)
+             .join(models.User, models.Event.organizer_id==models.User.id)
              .join(models.Venue)
-             .filter(models.Booking.id==order_id)
+             .filter(models.Booking.id==order_id, models.Booking.user_id==auth_user.id)
              .first()
             )
-    ##________________________________________________
-    print(order.Booking.__dict__)
-    # print(order[0]._asdict())
-    # for _ in order:
-    #     print(_._asdict)
-    ##________________________________________________
+    if not order:
+        raise HTTPException(
+            status_code=404,
+            detail='Order not found...'
+            )
+    # tickets = [n._asdict() for n in order]
+    res = {
+        'name': order.Event.name,
+        'date': order.Event.starts,
+        'location': order.Venue.name,
+        'organizer': order.User.name,
+        'ticket_type': order.Ticket.type,
+        'attendee': auth_user
+    }
+    return res

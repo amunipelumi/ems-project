@@ -189,3 +189,14 @@ class AllOrders(BaseModel):
     name: str
     date: datetime
     ticket: TicketType
+
+class OrderDetail(BaseModel):
+    name: str
+    date: datetime
+    location: str
+    organizer: str
+    ticket_type: TicketType
+    attendee: UserTable
+
+    class Config:
+        from_attributes = True
