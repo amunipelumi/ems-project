@@ -1,7 +1,6 @@
 ###
-from fastapi import status, APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 
 ###
@@ -16,9 +15,6 @@ router = APIRouter(
     prefix=f'{prefix_}/tickets',
     tags=['Tickets']
 )
-
-# PUT /{ticket_id}: Update ticket information
-# DELETE /{ticket_id}: Delete a ticket
 
 # Event name
 # Ticket type 
@@ -54,6 +50,7 @@ def my_tickets(
         all_tickets.append(res)
     return all_tickets
 
+# Get ticket details
 @router.get('/{order_id}', response_model=schemas.OrderDetail)
 def my_ticket(
     order_id: int,
@@ -81,6 +78,7 @@ def my_ticket(
         'location': order.Venue.name,
         'organizer': order.User.name,
         'ticket_type': order.Ticket.type,
+        'ticket_quantity': order.Booking.quantity,
         'attendee': auth_user
     }
     return res

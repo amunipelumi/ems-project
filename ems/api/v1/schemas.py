@@ -196,7 +196,12 @@ class OrderDetail(BaseModel):
     location: str
     organizer: str
     ticket_type: TicketType
+    ticket_quantity: int
     attendee: UserTable
 
     class Config:
         from_attributes = True
+
+class OrderUpdate(BaseModel):
+    type: Optional[TicketType] = None
+    quantity: Optional[int] = None

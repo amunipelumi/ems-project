@@ -118,3 +118,88 @@ def book_event(
         'event_venue': event.venue[0].name
     }
     return response
+
+# Update order
+@router.put('/{order_id}', status_code=202)
+def update_booking(
+    order_id: int,
+    order: schemas.OrderUpdate,
+    db: Session=Depends(database.get_db),
+    auth_user: dict=Depends(oauth2.current_user)
+    ):
+    new_ticket_type = order.type # new type
+    new_order_quantity = order.quantity # new quantity
+    ##
+    order_ = db.query(models.Booking).filter_by(
+        id=order_id,
+        user_id=auth_user.id
+        ).options(
+            joinedload(models.Booking.ticket)
+            ).first()
+    if not order_:
+        raise HTTPException(
+            status_code=404,
+            detail='Your booking for this event was not found'
+            )
+    ##
+    # Change the quantity
+    former_order_quantity = order_.quantity
+    total_ticket_quantity = order_.ticket.quantity
+    total_ticket_booked = order_.ticket.booked
+    ##
+    try:
+        if (((total_ticket_booked - former_order_quantity) + 
+             new_order_quantity) > 
+             total_ticket_quantity):
+            raise HTTPException(
+                status_code=403,
+                detail='Sorry tickets fully booked...'
+                )
+        ##
+        order_.quantity = new_order_quantity
+        order_.ticket.booked = (order_.ticket.booked - former_order_quantity) + new_order_quantity
+        db.commit()
+        db.refresh(order_)
+    ##
+    except SQLAlchemyError as error:
+        print(error)
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail='Unable to update order at this time...'
+            )
+    return {'detail': 'Order successfully updated...'}
+
+# Delete ticket or cancel order
+@router.delete('/{order_id}', status_code=204)
+def delete_booking(
+    order_id: int,
+    db: Session=Depends(database.get_db),
+    auth_user: dict=Depends(oauth2.current_user)
+    ):
+    ##
+    order_ = db.query(models.Booking).filter_by(
+        id=order_id,
+        user_id=auth_user.id
+        ).options(
+            joinedload(models.Booking.ticket)
+            ).first()
+    if not order_:
+        raise HTTPException(
+            status_code=404,
+            detail='Your booking for this event was not found'
+            )
+    ##
+    try:
+        former_order_quantity = order_.quantity
+        order_.ticket.booked = (order_.ticket.booked - former_order_quantity)
+        db.delete(order_)
+        db.commit()
+    ##
+    except SQLAlchemyError as error:
+        print(error)
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail='Sorry, operation was unsuccessful...'
+            )
