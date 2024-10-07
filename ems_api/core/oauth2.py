@@ -17,6 +17,7 @@ from ..db import database, models
 
 
 
+EXPIRE_DAYS = os.getenv('EXPIRE_DAYS')
 EXPIRE_MIN = os.getenv('EXPIRE_MIN')
 SECRET_KEY = os.getenv('SECRET_KEY')
 ALGORITHM = os.getenv('ALGORITHM')
@@ -30,19 +31,33 @@ exception = HTTPException(
     )
 
 # Generate jwt token using given data as payload
-def get_token(data: dict):
+def get_token(data: dict, token_type: str):
     payload = data.copy()
     expire_min = (
         datetime.now(timezone.utc) + 
         timedelta(minutes=float(EXPIRE_MIN))
         )
-    payload.update({'exp': expire_min})
+    expire_days = (
+        datetime.now(timezone.utc) + 
+        timedelta(days=int(EXPIRE_DAYS))
+        )
+    if token_type == "access":
+        payload.update({
+            'exp': expire_min,
+            'type': token_type
+            })
+    elif token_type == "refresh":
+        payload.update({
+            'exp': expire_days,
+            'type': token_type
+            })
+    else: raise ValueError('Invalid token type...')
     token = jwt.encode(
         payload, 
         key=SECRET_KEY, 
         algorithm=ALGORITHM
         )
-    return {'access_token': token, 'token_type': 'bearer'}
+    return token
 
 # Verify a given token 
 def verify_token(token: str):
@@ -52,11 +67,13 @@ def verify_token(token: str):
             key=SECRET_KEY, 
             algorithms=[ALGORITHM]
             )
+        type: str = payload.get('type')
         email: EmailStr = payload.get('email')
         is_admin: bool = payload.get('is_admin')
         if not email:
             raise exception
         _data = schemas.TokenData(
+            type=type,
             email=email, 
             is_admin=is_admin
             )

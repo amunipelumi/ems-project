@@ -52,13 +52,22 @@ class LoginUser(BaseModel):
     email: EmailStr
     password: str
 
-class Token(BaseModel):
+class LoginRes(BaseModel):
+    refresh_token: str
     access_token: str
-    token_type: str
+    token_type:str 
+
+class AccessToken(BaseModel):
+    access_token: str
+    token_type:str
 
 class TokenData(BaseModel):
     email: Optional[EmailStr] = None
     is_admin: Optional[bool]
+    type: str
+
+class Refresh(BaseModel):
+    token: str
 
 # Category management schema
 class Category(BaseModel):

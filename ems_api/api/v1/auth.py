@@ -66,7 +66,7 @@ def create_user(
 # Login/signin a user
 @router.post(
         '/signin',
-        response_model=schemas.Token
+        response_model=schemas.LoginRes
         )
 def login(
     user: opr=Depends(),
@@ -97,5 +97,31 @@ def login(
         'is_admin': db_query.is_admin,
         'email': user.username
         }
-    token = oauth2.get_token(data)
-    return token
+    access_token = oauth2.get_token(data, 'access')
+    refresh_token = oauth2.get_token(data, 'refresh')
+    return {
+        'token_type': 'bearer',
+        'access_token': access_token,
+        'refresh_token': refresh_token
+        }
+
+# Refresh token
+@router.post(
+        '/refresh', 
+        response_model=schemas.AccessToken
+        )
+def refresh_token(
+    body: schemas.Refresh
+    ):
+    token = body.token
+    # Verify token
+    _data = oauth2.verify_token(token)
+    if _data.type != 'refresh':
+        raise HTTPException(
+            status_code=401,
+            detail='Session expired, please login to continue...'
+            )
+    # Get and return new access token
+    data = _data.model_dump()
+    access_token = oauth2.get_token(data, 'access')
+    return {'access_token': access_token, 'token_type': 'bearer'}
