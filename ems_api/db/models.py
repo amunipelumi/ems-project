@@ -1,5 +1,5 @@
 ###
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, DateTime, Text, Enum 
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, DateTime, Text, Enum, Index
 # from sqlalchemy.sql.sqltypes import TIMESTAMP
 # from sqlalchemy.sql.expression import text
 from sqlalchemy.orm import relationship
@@ -40,6 +40,9 @@ class User(Base):
     # A user can make many bookings
     bookings = relationship('Booking', backref='user')
     
+    # Indexing
+    __table_args__ = (Index('id_email_idx', 'id', 'email'),)
+
 # Event model 
 class Event(Base):
     __tablename__ = 'events'
@@ -59,6 +62,9 @@ class Event(Base):
     tickets = relationship('Ticket', backref='event')
     bookings = relationship('Booking', backref='event')
     category = relationship('Category', backref='events')
+
+    # Indexing
+    __table_args__ = (Index('id_idx', 'id'),)
 
 # Venue Model 
 class Venue(Base):
