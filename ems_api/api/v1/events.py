@@ -1,14 +1,18 @@
 ###
 from fastapi import status, APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 
 ###
 from ...db import models, database
-from ...core import oauth2
+from ...core import oauth2, config
 from ...__ import prefix_
 from . import schemas
+
+import pickle
+import time
+import json
 
 
 
@@ -202,41 +206,69 @@ def update_event(
 # this will require pagination
 @router.get('/', response_model=List[schemas.Events])
 def get_events(
+    cache=Depends(config.redis_client),
     db: Session=Depends(database.get_db),
     auth_user: dict=Depends(oauth2.admin_user)
     ):
+    # start_time = time.time()
+    key = f'{auth_user.username}_events'
+    events = cache.get(key)
     ##
-    events = db.query(models.Event).filter_by(
-        organizer_id=auth_user.id
-        ).all()
-    if not events:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='No event found!'
-            )
+    if events is None:
+        events = db.query(models.Event).filter_by(
+            organizer_id=auth_user.id
+            ).all()
+        if not events:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='No event found!'
+                )
+        cache.set(key, pickle.dumps(events), 60)
+        # print(time.time() - start_time)
+        return events
+    ##
+    events = pickle.loads(events)
+    # print(time.time() - start_time)
     return events
 
 # Get a specific event (this is for admin)
 @router.get('/{event_id}', response_model=schemas.EventDetails)
-def get_event(event_id: int, 
-              db: Session=Depends(database.get_db),
-              auth_user: dict=Depends(oauth2.admin_user)):
-    event = db.query(models.Event).filter_by(
-        id=event_id, 
-        organizer_id=auth_user.id
-        ).options(
-            joinedload(models.Event.venue),
-            joinedload(models.Event.tickets),
-            joinedload(models.Event.category)
-            ).first()
-    if not event:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='No event found!'
-            )
-    event = event.__dict__
-    # Include organizer to correspond with response schema
-    event['organizer'] = auth_user
+def get_event(
+    event_id: int, 
+    cache=Depends(config.redis_client),
+    db: Session=Depends(database.get_db),
+    auth_user: dict=Depends(oauth2.admin_user)
+    ):
+    # start_time = time.time()
+    ##
+    key = f'{auth_user.username}_event_{event_id}'
+    event = cache.get(key)
+    ##
+    if event is None:
+        event = db.query(models.Event).filter_by(
+            id=event_id, 
+            organizer_id=auth_user.id
+            ).options(
+                joinedload(models.Event.venue),
+                joinedload(models.Event.tickets),
+                joinedload(models.Event.category)
+                ).first()
+        ##
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='No event found!'
+                )
+        ##
+        event = event.__dict__
+        # Include organizer to correspond with response schema
+        event['organizer'] = auth_user
+        cache.set(key, pickle.dumps(event), 60)
+        # print(time.time() - start_time)
+        return event
+    ##
+    event = pickle.loads(event) 
+    # print(time.time() - start_time)
     return event
     
 # Delete an event
