@@ -5,14 +5,15 @@ from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 
 ###
+from ems_tasks.tasks import recache_events, recache_event
 from ...db import models, database
 from ...core import oauth2, config
 from ...__ import prefix_
 from . import schemas
 
+##
 import pickle
 import time
-import json
 
 
 
@@ -132,7 +133,10 @@ def update_event(
     ##
     event = db.query(models.Event).filter_by(
         id=event_id
-        ).first()
+        ).options(
+            joinedload(models.Event.venue),
+            joinedload(models.Event.tickets)
+            ).first()
     if not event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -149,17 +153,13 @@ def update_event(
             db.add(category)
             db.flush()
         ##
-        venue = db.query(models.Venue).filter_by(
-            event_id=event.id
-            ).first()
+        venue = event.venue[0]
         venue_ = _venue.model_dump()
         for x, y in venue_.items():
             setattr(venue, x, y)
         db.flush()
         ##
-        tickets = db.query(models.Ticket).filter_by(
-            event_id=event.id
-            ).all()
+        tickets = event.tickets
         if len(tickets) != len(_ticket.root):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -174,6 +174,7 @@ def update_event(
             num += 1
         db.flush()
         ##
+        _event['category_id'] = category.id
         for x, y in _event.items():
             setattr(event, x, y)
         db.flush()
@@ -200,6 +201,9 @@ def update_event(
         'organizer': auth_user,
         'category': category
     }
+    # Run celery tasks to re-cache
+    recache_events.delay(auth_user)
+    recache_event.delay(event_id, auth_user)
     return response
 
 # Get all events (this is for admin)
@@ -223,7 +227,7 @@ def get_events(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail='No event found!'
                 )
-        cache.set(key, pickle.dumps(events), 60)
+        cache.set(key, pickle.dumps(events), 86400)
         # print(time.time() - start_time)
         return events
     ##
@@ -263,7 +267,7 @@ def get_event(
         event = event.__dict__
         # Include organizer to correspond with response schema
         event['organizer'] = auth_user
-        cache.set(key, pickle.dumps(event), 60)
+        cache.set(key, pickle.dumps(event), 86400)
         # print(time.time() - start_time)
         return event
     ##

@@ -107,14 +107,22 @@ class Tickt(Tick):
     class Config:
         from_attributes = True
 
-class Ticket(Tickt):
+class Tcket(Tickt):
     quantity: int
+
+    class Config:
+        from_attributes = True
+
+class Ticket(Tcket):
     booked: Optional[int] = 0
 
     class Config:
         from_attributes = True
 
 class Tickts(RootModel[List[Tickt]]):
+    pass
+
+class Tckets(RootModel[List[Tcket]]):
     pass
 
 class Tickets(RootModel[List[Ticket]]):
@@ -141,7 +149,7 @@ class Events(BaseModel):
 
 class CreateEvent(Event):
     venue: Venue
-    tickets: Tickets
+    tickets: Tckets
     category: Category
 
     class Config:
