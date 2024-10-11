@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 
 ###
-from ems_tasks.tasks import recache_events, recache_event
+from ...tasks.tasks import recache_events, recache_event
 from ...db import models, database
 from ...core import oauth2, config
 from ...__ import prefix_
@@ -202,8 +202,10 @@ def update_event(
         'category': category
     }
     # Run celery tasks to re-cache
-    recache_events.delay(auth_user)
-    recache_event.delay(event_id, auth_user)
+    user_id = auth_user.id
+    username = auth_user.username
+    recache_events.delay(user_id, username)
+    recache_event.delay(user_id, username, event_id)
     return response
 
 # Get all events (this is for admin)
