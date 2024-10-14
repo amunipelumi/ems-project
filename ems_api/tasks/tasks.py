@@ -1,5 +1,5 @@
 ##
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, aliased
 
 ##
 from ems_api.db import database, models
@@ -48,12 +48,15 @@ def recache_event(user_id: int, username: str, event_id: int):
         id=event_id,
         organizer_id=user_id
         ).options(
+            joinedload(models.Event.user),
             joinedload(models.Event.venue),
             joinedload(models.Event.tickets),
             joinedload(models.Event.category)
             ).first()
     ##
     if event:
+        event.organizer = event.user
+        del event.user
         cache.set(key, pickle.dumps(event), ex=86400)
         return {
             "Status": f"Successfully re-cached event id_{event_id}.",
