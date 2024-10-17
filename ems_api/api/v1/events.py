@@ -241,7 +241,6 @@ def get_events(
 @router.get('/{event_id}', response_model=schemas.EventDetails)
 def get_event(
     event_id: int, 
-    coll=Depends(config.mongo_db),
     cache=Depends(config.redis_client),
     db: Session=Depends(database.get_db),
     auth_user: dict=Depends(oauth2.admin_user)
@@ -269,12 +268,9 @@ def get_event(
         ##
         event = utils.to_dict(event, recurse=True)
         # Include organizer to correspond with response schema
-        event['organizer'] = auth_user
-        print(event)
-        m_id = coll.insert_one(event).inserted_id
+        event['organizer'] = event.pop('user')
         cache.set(key, pickle.dumps(event), 86400)
         # print(time.time() - start_time)
-        print(m_id)
         return event
     ##
     event = pickle.loads(event) 

@@ -1,5 +1,8 @@
 from passlib.context import CryptContext
 from sqlalchemy.orm import class_mapper
+from bson import ObjectId
+import enum
+
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -19,13 +22,21 @@ def verify(attempted_pwd, hashed_pwd):
 def to_dict(obj, recurse=False):
     """
     This helps to converts a SQLAlchemy model instance to a Python dictionary.\n
-    Set recurse=True if query has relationships.
+    Set *recurse=True* if query has relationships.
     """
+    # Handling enum in ticket
+    def handle_enum(data):
+        if isinstance(data, enum.Enum):
+            return data.value
+        elif isinstance(data, ObjectId):
+            return str(data)
+        return data
+    ##
     if not recurse:
-        return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
+        return {c.name: handle_enum(getattr(obj, c.name)) for c in obj.__table__.columns}
     ##
     else:
-        columns = {c.key: getattr(obj, c.key) for c in class_mapper(obj.__class__).columns}
+        columns = {c.key: handle_enum(getattr(obj, c.key)) for c in class_mapper(obj.__class__).columns}
         for rel in class_mapper(obj.__class__).relationships:
             rel_obj = getattr(obj, rel.key)
             ##
