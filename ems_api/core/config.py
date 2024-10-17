@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from gridfs import GridFS
 from redis import Redis
 import os
 
@@ -16,14 +17,33 @@ MDB_NAME = str(os.getenv('MDB_NAME'))
 MDB_COLL = str(os.getenv('MDB_COLL'))
 
 
-def redis_client():
-    return Redis(HOST, PORT, DB, PASSWORD)
+rd_client = Redis(HOST, PORT, DB, PASSWORD)
+mdb_client = MongoClient(f'mongodb://{MDB_HOST}:{MDB_PORT}/')
 
-def mongo_db():
+def redis_client():
+    try:
+        yield rd_client
+    finally:
+        rd_client.close()
+
+def mongo_client():
+    try:
+        yield mdb_client
+    finally:
+        mdb_client.close()
+
+def mongo_coll():
     '''
-    Returns a specific MongoDB collection client specified in .env.
+    Return MongoDB collection.
     '''
-    client = MongoClient(f'mongodb://{MDB_HOST}:{MDB_PORT}/')
+    client = mongo_client()
+    return client[MDB_NAME][MDB_COLL]
+
+def doc_upload():
+    '''
+    Returns GridFS ready for storing documents and files in MongoDB.
+    '''
+    client = mongo_client()
     db = client[MDB_NAME]
-    data = db[MDB_COLL]
-    return data
+    # coll = db[MDB_COLL]
+    return GridFS(db)
