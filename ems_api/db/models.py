@@ -36,9 +36,9 @@ class User(Base):
     
     # *Relationships*
     # Admin-user can organize many events
-    events = relationship('Event', backref='user')
+    events = relationship('Event', backref='user', lazy='noload')
     # A user can make many bookings
-    bookings = relationship('Booking', backref='user')
+    bookings = relationship('Booking', backref='user', lazy='noload')
     
     # Indexing
     __table_args__ = (Index('id_email_idx', 'id', 'email'),)
@@ -58,10 +58,10 @@ class Event(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
     # *Relationships*
-    venue = relationship('Venue', backref='events')
-    tickets = relationship('Ticket', backref='event')
-    bookings = relationship('Booking', backref='event')
-    category = relationship('Category', backref='events')
+    venue = relationship('Venue', backref='events', lazy='noload')
+    tickets = relationship('Ticket', backref='event', lazy='noload')
+    bookings = relationship('Booking', backref='event', lazy='noload')
+    category = relationship('Category', backref='events', lazy='noload')
 
     # Indexing
     __table_args__ = (Index('id_idx', 'id'),)
@@ -92,7 +92,7 @@ class Booking(Base):
     date = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
     # *Relationships*
-    ticket = relationship('Ticket', backref='bookings')
+    ticket = relationship('Ticket', backref='bookings', lazy='noload')
 
 # Ticket Model 
 class Ticket(Base):
