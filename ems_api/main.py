@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 ###
-from .api.v1 import auth, users, events, tickets, bookings, search
+from .api.v1 import auth, users, events, tickets, bookings, search, uploads
 # from .db.database import Engine
 # from .db import models
 
@@ -27,6 +27,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(events.router)
 app.include_router(search.router)
+app.include_router(uploads.router)
 app.include_router(tickets.router)
 app.include_router(bookings.router)
 
