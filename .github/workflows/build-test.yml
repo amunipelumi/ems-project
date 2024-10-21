@@ -3,9 +3,11 @@
 name: EMS Project Pipeline
 on:
   push:
-    branches: [ $default-branch ]
+    branches:
+        - main
 #   pull_request:
-#     branches: [ $default-branch ]
+#     branches: 
+#         - main
 jobs:
   build-test:
     runs-on: ubuntu-22.04
