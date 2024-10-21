@@ -11,6 +11,8 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-22.04
+    environment:
+        name: Testing
     env:
         DB_USERNAME: ${{secrets.DB_USERNAME}}
         DB_HOSTNAME: ${{secrets.DB_HOSTNAME}}
