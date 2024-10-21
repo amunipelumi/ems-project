@@ -35,7 +35,7 @@ jobs:
         MDB_COLL: ${{secrets.MDB_COLL}}
     services:
         postgres:
-            image: postgres:14
+            image: postgres
             env:
                 POSTGRES_USER: ${{secrets.DB_USERNAME}}
                 POSTGRES_PASSWORD: ${{secrets.DB_PASS}}
