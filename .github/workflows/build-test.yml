@@ -1,0 +1,86 @@
+# Build and test EMS application
+
+name: EMS Project Pipeline
+on:
+  push:
+    branches: [ $default-branch ]
+#   pull_request:
+#     branches: [ $default-branch ]
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    env:
+        DB_USERNAME: ${{secrets.DB_USERNAME}}
+        DB_HOSTNAME: ${{secrets.DB_HOSTNAME}}
+        DB_PASS: ${{secrets.DB_PASS}}
+        DB_PORT: ${{secrets.DB_PORT}}
+        DB_NAME: ${{secrets.DB_NAME}}-test
+        SECRET_KEY: ${{secrets.SECRET_KEY}}
+        ALGORITHM: ${{secrets.ALGORITHM}}
+        EXPIRE_MIN: ${{secrets.EXPIRE_MIN}}
+        EXPIRE_DAYS: ${{secrets.EXPIRE_DAYS}}
+        REDIS_PASS: ${{secrets.REDIS_PASS}}
+        REDIS_HOST: ${{secrets.REDIS_HOST}}
+        REDIS_PORT: ${{secrets.REDIS_PORT}}
+        REDIS_DB: ${{secrets.REDIS_DB}}
+        RMQ_PORT: ${{secrets.RMQ_PORT}}
+        RMQ_USERNAME: ${{secrets.RMQ_USERNAME}}
+        RMQ_PASSWORD: ${{secrets.RMQ_PASSWORD}}
+        RMQ_ADDRESS: ${{secrets.RMQ_ADDRESS}}
+        MDB_HOST: ${{secrets.MDB_HOST}}
+        MDB_PORT: ${{secrets.MDB_PORT}}
+        MDB_NAME: ${{secrets.MDB_NAME}}
+        MDB_COLL: ${{secrets.MDB_COLL}}
+    services:
+        postgres:
+            image: postgres:14
+            ports: [5432:5432]
+            options: >-
+                --health-cmd="pg_isready -U ${{env.DB_USERNAME}}"
+                --health-interval=10s
+                --health-timeout=5s
+                --health-retries=5
+        redis:
+            image: redis:6
+            ports:
+                - 6379:6379
+            options: >-
+                --health-cmd="redis-cli ping"
+                --health-interval=10s
+                --health-timeout=5s
+                --health-retries=5
+        rabbitmq:
+            image: rabbitmq:4-management
+            ports:
+                - 5672:5672
+                - 15672:15672 
+            options: >-
+                --health-cmd="rabbitmq-diagnostics -q ping"
+                --health-interval=10s
+                --health-timeout=5s
+                --health-retries=5
+        mongodb:
+            image: mongo:8
+            ports:
+            - 27017:27017
+            options: >-
+                --health-cmd="mongosh --eval 'db.runCommand({ ping: 1 })'"
+                --health-interval=10s
+                --health-timeout=5s
+                --health-retries=5
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10.x"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Run celery task server
+      run: |
+        celery -A myapp worker --loglevel=info &
+    - name: Test with pytest
+      run: |
+        pytest
