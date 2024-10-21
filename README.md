@@ -1,7 +1,7 @@
 # **Event Management System**
 
-### **Architecture**
-![Architecture](ems-project.png)
+### **Structure**
+![Structure](ems-project.png)
 
 ### **Schema**
 ![Schema](ems.png)
