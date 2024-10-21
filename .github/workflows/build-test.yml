@@ -36,7 +36,8 @@ jobs:
     services:
         postgres:
             image: postgres:14
-            ports: [5432:5432]
+            ports: 
+                - 5432:5432
             options: >-
                 --health-cmd="pg_isready -U ${{env.DB_USERNAME}}"
                 --health-interval=10s
@@ -64,7 +65,7 @@ jobs:
         mongodb:
             image: mongo:8
             ports:
-            - 27017:27017
+                - 27017:27017
             options: >-
                 --health-cmd="mongosh --eval 'db.runCommand({ ping: 1 })'"
                 --health-interval=10s
