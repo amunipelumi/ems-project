@@ -18,7 +18,7 @@ jobs:
         DB_HOSTNAME: ${{secrets.DB_HOSTNAME}}
         DB_PASS: ${{secrets.DB_PASS}}
         DB_PORT: ${{secrets.DB_PORT}}
-        DB_NAME: ${{secrets.DB_NAME}}-test
+        DB_NAME: ${{secrets.DB_NAME}}
         SECRET_KEY: ${{secrets.SECRET_KEY}}
         ALGORITHM: ${{secrets.ALGORITHM}}
         EXPIRE_MIN: ${{secrets.EXPIRE_MIN}}
@@ -89,7 +89,7 @@ jobs:
         pip install -r requirements.txt
     - name: Run celery task server
       run: |
-        celery -A myapp worker --loglevel=info &
+        celery -A ems_api worker --loglevel=INFO &
     - name: Test with pytest
       run: |
         pytest
