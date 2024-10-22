@@ -56,12 +56,11 @@ jobs:
             ports:
                 - 6379:6379
             options: >-
-                --volume ./redis.conf:/usr/local/etc/redis/redis.conf 
-                --entrypoint redis-server /usr/local/etc/redis/redis.conf
-                --health-cmd "redis-cli -a \$REDIS_PASSWORD ping" 
+                --health-cmd "redis-cli -a $${REDIS_PASSWORD} ping" 
                 --health-interval=10s
                 --health-timeout=5s
                 --health-retries=5
+            command: ["redis-server", "--requirepass", "$${REDIS_PASSWORD}"]
         rabbitmq:
             image: rabbitmq:4-management
             env:
@@ -97,6 +96,14 @@ jobs:
     - name: Run celery task server
       run: |
         celery -A ems_api worker --loglevel=INFO &
+        echo $! > celery.pid
     - name: Test with pytest
       run: |
         pytest
+      
+    # - name: Celery cleanup
+    # if: always()
+    # run: |
+    #     if [ -f celery.pid ]; then
+    #     kill $(cat celery.pid)
+    #     fi
