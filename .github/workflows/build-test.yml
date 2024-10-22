@@ -50,13 +50,13 @@ jobs:
                 --health-timeout=5s
                 --health-retries=5
         redis:
-            image: redis:6
+            image: redis
             env:
                 REDIS_PASSWORD: ${{secrets.REDIS_PASS}}
             ports:
                 - 6379:6379
             options: >-
-                --init /bin/sh -c "sysctl -w vm.overcommit_memory=1"
+                --init "sudo sysctl -w vm.overcommit_memory=1"
                 -e REDIS_PASSWORD=$${REDIS_PASSWORD}
                 --health-cmd "redis-cli -a $${REDIS_PASSWORD} ping" 
                 --health-interval=10s
@@ -76,7 +76,7 @@ jobs:
                 --health-timeout=5s
                 --health-retries=5
         mongodb:
-            image: mongo:8
+            image: mongo
             ports:
                 - 27017:27017
             options: >-
