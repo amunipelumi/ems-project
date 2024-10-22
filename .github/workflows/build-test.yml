@@ -56,7 +56,7 @@ jobs:
             ports:
                 - 6379:6379
             options: >-
-                --volume ${GITHUB_WORKSPACE}/redis.conf:/usr/local/etc/redis/redis.conf 
+                --volume ./redis.conf:/usr/local/etc/redis/redis.conf 
                 --entrypoint redis-server /usr/local/etc/redis/redis.conf
                 --health-cmd "redis-cli -a $REDIS_PASSWORD ping" 
                 --health-interval=10s
