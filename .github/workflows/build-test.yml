@@ -51,15 +51,21 @@ jobs:
                 --health-retries=5
         redis:
             image: redis:6
+            env:
+                REDIS_PASSWORD: ${{secrets.REDIS_PASS}}
             ports:
                 - 6379:6379
             options: >-
+                --requirepass "${{secrets.REDIS_PASS}}"
                 --health-cmd="redis-cli ping"
                 --health-interval=10s
                 --health-timeout=5s
                 --health-retries=5
         rabbitmq:
             image: rabbitmq:4-management
+            env:
+                RABBITMQ_DEFAULT_USER: ${{secrets.RMQ_USERNAME}}
+                RABBITMQ_DEFAULT_PASS: ${{secrets.RMQ_PASSWORD}}          
             ports:
                 - 5672:5672
                 - 15672:15672 
