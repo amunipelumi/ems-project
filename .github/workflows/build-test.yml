@@ -35,9 +35,10 @@ jobs:
         MDB_PORT: ${{secrets.MDB_PORT}}
         MDB_NAME: ${{secrets.MDB_NAME}}
         MDB_COLL: ${{secrets.MDB_COLL}}
+        TEST_MODE: ${{secrets.TEST_MODE}}
     services:
         postgres:
-            image: postgres
+            image: postgres:15
             env:
                 POSTGRES_USER: ${{secrets.DB_USERNAME}}
                 POSTGRES_PASSWORD: ${{secrets.DB_PASS}}
@@ -50,23 +51,16 @@ jobs:
                 --health-timeout=5s
                 --health-retries=5
         redis:
-            image: redis
-            env:
-                REDIS_PASSWORD: ${{secrets.REDIS_PASS}}
+            image: redis:6
             ports:
                 - 6379:6379
             options: >-
-                --init "sudo sysctl -w vm.overcommit_memory=1"
-                -e REDIS_PASSWORD=$${REDIS_PASSWORD}
-                --health-cmd "redis-cli -a $${REDIS_PASSWORD} ping" 
+                --health-cmd "redis-cli ping" 
                 --health-interval=10s
                 --health-timeout=5s
                 --health-retries=5
         rabbitmq:
             image: rabbitmq:4-management
-            env:
-                RABBITMQ_DEFAULT_USER: ${{secrets.RMQ_USERNAME}}
-                RABBITMQ_DEFAULT_PASS: ${{secrets.RMQ_PASSWORD}}          
             ports:
                 - 5672:5672
                 - 15672:15672 
@@ -76,7 +70,7 @@ jobs:
                 --health-timeout=5s
                 --health-retries=5
         mongodb:
-            image: mongo
+            image: mongo:8
             ports:
                 - 27017:27017
             options: >-
@@ -97,7 +91,6 @@ jobs:
     - name: Run celery task server
       run: |
         celery -A ems_api worker --loglevel=INFO &
-        echo $! > celery.pid
     - name: Test with pytest
       run: |
         pytest
