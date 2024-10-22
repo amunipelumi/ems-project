@@ -56,6 +56,7 @@ jobs:
             ports:
                 - 6379:6379
             options: >-
+                --init /bin/sh -c "sysctl -w vm.overcommit_memory=1"
                 -e REDIS_PASSWORD=$${REDIS_PASSWORD}
                 --sysctl vm.overcommit_memory=1
                 --health-cmd "redis-cli -a $${REDIS_PASSWORD} ping" 
@@ -101,4 +102,3 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
-
