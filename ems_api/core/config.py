@@ -4,6 +4,7 @@ from redis import Redis
 import os
 
 
+TEST_MODE = os.getenv('TEST_MODE').lower() in ('true')
 
 PASSWORD = os.getenv('REDIS_PASS')
 HOST = str(os.getenv('REDIS_HOST'))
@@ -15,6 +16,8 @@ MDB_PORT = int(os.getenv('MDB_PORT'))
 
 def redis_client():
     client = Redis(HOST, PORT, DB, PASSWORD)
+    if TEST_MODE:
+        client = Redis(HOST, PORT)
     try:
         yield client
     finally:
