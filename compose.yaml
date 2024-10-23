@@ -19,7 +19,7 @@ services:
       - "4001:6379"
 
   rabbitmq:
-    image: rabbitmq-management
+    image: rabbitmq
     env_file:
       - ./.env
     ports:
