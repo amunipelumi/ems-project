@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres
+    env_file:
+      - ./.env
+    ports:
+      - "4000:5432"
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+
+  redis:
+    image: redis
+    env_file:
+      - ./.env
+    ports:
+      - "4001:6379"
+
+  rabbitmq:
+    image: rabbitmq-management
+    env_file:
+      - ./.env
+    ports:
+      - "4002:5672"
+      - "4003:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  mongodb:
+    image: mongo
+    env_file:
+      - ./.env
+    ports:
+      - "4004:27017"
+    volumes:
+      - mongodb-data:/data/db
+
+  celery:
+    build: .
+    env_file:
+      - ./.env
+    command: celery -A ems_api worker -l INFO
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: always
+
+  ems_api:
+    build: .
+    env_file:
+      - ./.env
+    ports:
+      - "4005:8000" 
+    command: uvicorn ems_api.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      - celery
+      - mongodb
+      - postgres
+    restart: always
+
+volumes:
+  postgres-db:
+  mongodb-data:
+  rabbitmq-data:
