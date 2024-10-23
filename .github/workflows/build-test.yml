@@ -3,8 +3,8 @@
 name: EMS Project Pipeline
 on:
   push:
-    # branches:
-    #     - main
+    branches:
+        - "m"
 #   pull_request:
 #     branches: 
 #         - main
