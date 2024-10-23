@@ -53,7 +53,11 @@ services:
       - ./.env
     ports:
       - "4005:8000" 
-    command: uvicorn ems_api.main:app --host 0.0.0.0 --port 8000
+    command: |
+      /bin/sh -c "
+      alembic upgrade head &&
+      uvicorn ems_api.main:app --host 0.0.0.0 --port 8000
+      "
     depends_on:
       - celery
       - mongodb
