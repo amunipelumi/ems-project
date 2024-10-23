@@ -5,9 +5,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /ems-project
 
-RUN apt-get update && apt-get install -y libgl1-mesa-glx
-
-RUN apt-get update && apt-get install -y inetutils-ping
+# RUN apt-get update && apt-get install -y inetutils-ping
 
 COPY requirements.txt ./
 
