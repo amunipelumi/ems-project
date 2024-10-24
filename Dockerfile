@@ -9,6 +9,8 @@ WORKDIR /ems-project
 
 COPY requirements.txt ./
 
-RUN pip install -U pip && pip install -r requirements.txt
+RUN python3 -m pip install -U pip
+
+RUN pip install -r requirements.txt
 
 COPY . ./
