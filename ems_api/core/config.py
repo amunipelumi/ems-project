@@ -6,7 +6,7 @@ import os
 
 TEST_MODE = os.getenv('TEST_MODE').lower() in ('true')
 
-PASSWORD = os.getenv('REDIS_PASS')
+PASSWORD = str(os.getenv('REDIS_PASSWORD'))
 HOST = str(os.getenv('REDIS_HOST'))
 PORT = int(os.getenv('REDIS_PORT'))
 DB = int(os.getenv('REDIS_DB'))
