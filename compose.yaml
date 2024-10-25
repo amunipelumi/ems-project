@@ -46,6 +46,8 @@ services:
     depends_on:
       - redis
       - rabbitmq
+    volumes:
+      - ./ems_api:/ems-project/ems_api:ro
     restart: always
 
   ems_api:
@@ -63,7 +65,11 @@ services:
       - celery
       - mongodb
       - postgres
+    volumes:
+      - ./alembic:/ems-project/alembic:ro
+      - ./ems_api:/ems-project/ems_api:ro
     restart: always
+
 
 volumes:
   postgres-db:
