@@ -15,7 +15,7 @@ def recache_events(user_id: int, username: str):
     """
     Re-cache events for user after an event update.
     """
-    cache = config.redis_client()
+    cache = next(config.redis_client())
     db: Session=next(database.get_db())
     key = f'{username}_events'
     ##
@@ -40,7 +40,7 @@ def recache_event(user_id: int, username: str, event_id: int):
     """
     Re-cache a specific event for user after an event update.
     """
-    cache = config.redis_client()
+    cache = next(config.redis_client())
     db: Session=next(database.get_db())
     key = f'{username}_event_{event_id}'
     ##
