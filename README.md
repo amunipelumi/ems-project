@@ -92,12 +92,13 @@ Make sure docker is properly installed and running to avoid errors.
     - `MDB_NAME`: Set to any name of choice
     - `MDB_COLL`: Set to any name of choice
 
-- Run application
+- Application
+   - Run
       ```bash
          docker-compose up -d
       ```
 
-- Check status
+   - Status
       ```bash
          docker logs --tail 25 <name of container>
       ```
