@@ -97,6 +97,11 @@ Make sure docker is properly installed and running to avoid errors.
          docker-compose up -d
       ```
 
+- Check status
+      ```bash
+         docker logs --tail 25 <name of container>
+      ```
+
 ## **License**
 This project is licensed under the MIT License.  
 See the [LICENSE](LICENSE) file for details.
