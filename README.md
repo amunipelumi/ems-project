@@ -28,11 +28,13 @@ The framework and tools utilized are diverse, such as:
 - [Contact](#Contact)
 
 ## **Structure**
-This is a high level overview of the project.  
+This is a high level overview of the project. 
+
 ![Structure](ems-project.png)
 
 ## **Schema**
 This is an overview of the database layout.  
+
 ![Schema](ems.png)
 
 ## **Setup**
