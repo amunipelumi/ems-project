@@ -1,5 +1,6 @@
 ##
 .env
+/manifests/secret*
 
 # Django project
 /media

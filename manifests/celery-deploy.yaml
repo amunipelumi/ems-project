@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ems-celery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ems-celery
+  template:
+    metadata:
+      labels:
+        app: ems-celery
+    spec:
+      containers:
+      - name: ems-celery
+        image: amunipelumi/ems-k8s:v1.0
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        envFrom:
+          - secretRef:
+              name: envs
+        command: ["celery"]
+        args: ["-A", "ems_api", "worker", "-l", "INFO"]
+
+# ---
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: ems-celery
+# spec:
+#   type: NodePort
+#   selector:
+#     app: ems-celery
+#   ports:
+#   - port: 8000
+#     targetPort: 8000
+#     nodePort: 30117

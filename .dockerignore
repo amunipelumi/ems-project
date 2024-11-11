@@ -13,6 +13,7 @@ compose.yaml
 /ems_backend
 /ems_client
 /test
+/manifests
 
 # Django project
 /media
