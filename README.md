@@ -19,6 +19,7 @@ The framework and tools utilized are diverse, such as:
 - [Alembic](https://alembic.sqlalchemy.org/en/latest/)
 - [Pytest](https://docs.pytest.org/en/stable/getting-started.html)
 - [Docker](https://docs.docker.com/engine/install/)
+- [Kubernetes](https://kubernetes.io/docs/home/)
 
 ### Table of Contents
 - [Structure](#Structure)
@@ -48,6 +49,7 @@ Make sure docker is properly installed and running to avoid errors.
 - [Redis](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/)
 - [Docker](https://docs.docker.com/engine/install/)
 - [MongoDB](https://www.mongodb.com/try/download/community)
+- [Kubernetes](https://kubernetes.io/docs/home/)
 
 ### Steps
 - Clone the repository
@@ -102,6 +104,21 @@ Make sure docker is properly installed and running to avoid errors.
       ```bash
          docker logs --tail 25 <name of container>
       ```
+
+### Kubernetes
+- Change directory
+   ```bash
+      cd manifests  
+   ```
+
+- Setup `ems-secrets.yaml` with base64 encoded strings
+   ```bash
+      echo -n "False" | base64 --> RmFsc2U=
+   ```
+- Run
+   ```bash
+      kubectl apply -f .
+   ```
 
 ## **License**
 This project is licensed under the MIT License.  
